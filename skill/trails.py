@@ -1,6 +1,7 @@
 import datetime
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
+from fuzzywuzzy import fuzz
 
 class EST5EDT(datetime.tzinfo):
 
@@ -171,3 +172,18 @@ class Trails(object):
             else:
                 statement += "{}, ".format(trail.name())
         return statement
+
+    def get_trail(self, fuzzy_trail):
+        # Return the best trail name match using fuzzy logic
+        trails = []
+        score = 0
+        for trail in self._trails:
+            new_score = fuzz.token_set_ratio(trail.name(), fuzzy_trail)
+            if new_score > 80:
+                trails.append(trail)
+            if new_score > score:
+                score = new_score
+                winning_trail = trail
+        if trails:
+            return trails
+        return [winning_trail]

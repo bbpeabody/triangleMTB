@@ -1,180 +1,112 @@
 import logging
-#import requests
-#import six
-#import random
 
-#from ask_sdk_core.skill_builder import SkillBuilder
-#from ask_sdk_core.handler_input import HandlerInput
-#from ask_sdk_core.dispatch_components import (
-#    AbstractRequestHandler, AbstractExceptionHandler,
-#    AbstractResponseInterceptor, AbstractRequestInterceptor)
-#from ask_sdk_core.utils import is_intent_name, is_request_type
-#
-##from typing import Union, Dict, Any, List
-#from ask_sdk_model.dialog import (
-#    ElicitSlotDirective, DelegateDirective)
-#from ask_sdk_model import (
-#    Response, IntentRequest, DialogState, SlotConfirmationStatus, Slot)
-#from ask_sdk_model.slu.entityresolution import StatusCode
-#
-#logger = logging.getLogger(__name__)
-#logger.setLevel(logging.INFO)
+from ask_sdk_core.skill_builder import SkillBuilder
+from ask_sdk_core.handler_input import HandlerInput
+from ask_sdk_core.dispatch_components import (
+    AbstractRequestHandler, AbstractExceptionHandler,
+    AbstractResponseInterceptor, AbstractRequestInterceptor)
+from ask_sdk_core.utils import is_intent_name, is_request_type
+from ask_sdk_core.utils.request_util import get_slot_value
+
+from ask_sdk_model.dialog import (
+    ElicitSlotDirective, DelegateDirective)
+from ask_sdk_model import (
+    Response, IntentRequest, DialogState, SlotConfirmationStatus, Slot)
+from ask_sdk_model.slu.entityresolution import StatusCode
+from ask_sdk_model.ui import SimpleCard
 
 import trails
 
-##############################
-# Builders
-##############################
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
-def build_PlainSpeech(body):
-    speech = {}
-    speech['type'] = 'PlainText'
-    speech['text'] = body
-    return speech
+class LaunchRequestHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return is_request_type("LaunchRequest")(handler_input)
 
-
-def build_response(message, session_attributes={}):
-    response = {}
-    response['version'] = '1.0'
-    response['sessionAttributes'] = session_attributes
-    response['response'] = message
-    return response
-
-
-def build_SimpleCard(title, body):
-    card = {}
-    card['type'] = 'Simple'
-    card['title'] = title
-    card['content'] = body
-    return card
-
-
-##############################
-# Responses
-##############################
-
-
-def conversation(title, body, session_attributes):
-    speechlet = {}
-    speechlet['outputSpeech'] = build_PlainSpeech(body)
-    speechlet['card'] = build_SimpleCard(title, body)
-    speechlet['shouldEndSession'] = False
-    return build_response(speechlet, session_attributes=session_attributes)
-
-
-def statement(title, body):
-    speechlet = {}
-    speechlet['outputSpeech'] = build_PlainSpeech(body)
-    speechlet['card'] = build_SimpleCard(title, body)
-    speechlet['shouldEndSession'] = True
-    return build_response(speechlet)
-
-
-def continue_dialog():
-    message = {}
-    message['shouldEndSession'] = False
-    message['directives'] = [{'type': 'Dialog.Delegate'}]
-    return build_response(message)
-
-
-##############################
-# Custom Intents
-##############################
-
-
-def sing_intent(event, context):
-    song = "Daisy, Daisy. Give me your answer, do. I'm half crazy all for the love of you"
-    return statement("daisy_bell_intent", song)
-
-
-def counter_intent(event, context):
-    session_attributes = event['session']['attributes']
-
-    if "counter" in session_attributes:
-        session_attributes['counter'] += 1
-
-    else:
-        session_attributes['counter'] = 1
-
-    return conversation("counter_intent", session_attributes['counter'],
-                        session_attributes)
-
-
-def trip_intent(event, context):
-    dialog_state = event['request']['dialogState']
-
-    if dialog_state in ("STARTED", "IN_PROGRESS"):
-        return continue_dialog()
-
-    elif dialog_state == "COMPLETED":
-        return statement("trip_intent", "Have a good trip")
-
-    else:
-        return statement("trip_intent", "No dialog")
-
-
-##############################
-# Required Intents
-##############################
-
-
-def cancel_intent():
-    return statement("CancelIntent", "You want to cancel")	#don't use CancelIntent as title it causes code reference error during certification 
-
-def help_intent():
-    return statement("CancelIntent", "You want help")		#same here don't use CancelIntent
-
-def stop_intent():
-    return statement("StopIntent", "You want to stop")		#here also don't use StopIntent
-
-
-##############################
-# On Launch
-##############################
-
-def on_launch(event, context):
-    t = trails.Trails()
-    return statement("Trail Status", t.summary())
-
-##############################
-# Routing
-##############################
-
-
-def intent_router(event, context):
-    intent = event['request']['intent']['name']
-
-    # Custom Intents
-
-    if intent == "OpenIntent":
+    def handle(self, handler_input):
         t = trails.Trails()
-        return statement("Open Trails", t.summary("open"))
+        speech_text = t.summary()
+        handler_input.response_builder.speak(speech_text).set_card(
+            SimpleCard("Trail Status", speech_text)).set_should_end_session(True)
+        return handler_input.response_builder.response
 
-    if intent == "ClosedIntent":
+class OpenIntentHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return is_intent_name("OpenIntent")(handler_input)
+
+    def handle(self, handler_input):
         t = trails.Trails()
-        return statement("Open Trails", t.summary("closed"))
+        speech_text = t.summary("open")
+        handler_input.response_builder.speak(speech_text).set_card(
+            SimpleCard("Open Trails", speech_text)).set_should_end_session(True)
+        return handler_input.response_builder.response
+
+class ClosedIntentHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return is_intent_name("ClosedIntent")(handler_input)
+
+    def handle(self, handler_input):
+        t = trails.Trails()
+        speech_text = t.summary("closed")
+        handler_input.response_builder.speak(speech_text).set_card(
+            SimpleCard("Closed Trails", speech_text)).set_should_end_session(True)
+        return handler_input.response_builder.response
+
+class TrailIntentHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return is_intent_name("TrailIntent")(handler_input)
+
+    def handle(self, handler_input):
+        t = trails.Trails()
+        #speech_text = t.summary("closed")
+        slot_trail = get_slot_value(handler_input, "trail")
+        matched_trails = t.get_trail(slot_trail)
+        speech_text = ""
+        for trail in matched_trails:
+            speech_text += "{} is {}. Updated {} ago. ".format(trail.name(), trail.status(), trail.age())
+        handler_input.response_builder.speak(speech_text).set_card(
+            SimpleCard("Trail", speech_text)).set_should_end_session(True)
+        return handler_input.response_builder.response
     
-    # Required Intents
+class HelpIntentHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return is_intent_name("AMAZON.HelpIntent")(handler_input)
 
-    if intent == "AMAZON.CancelIntent":
-        return cancel_intent()
+    def handle(self, handler_input):
+        speech_text = """
+            I can provide status for all the trails listed on triangle MTB dot com.  You can ask me questions like:
+                What trails are open?
+                Can I ride Beaver Dam?
+                Is San Lee open?
+        """
+        handler_input.response_builder.speak(speech_text).ask(speech_text).set_card(
+            SimpleCard("Help", speech_text))
+        return handler_input.response_builder.response
 
-    if intent == "AMAZON.HelpIntent":
-        return help_intent()
+class AllExceptionHandler(AbstractExceptionHandler):
 
-    if intent == "AMAZON.StopIntent":
-        return stop_intent()
+    def can_handle(self, handler_input, exception):
+        # type: (HandlerInput, Exception) -> bool
+        return True
 
+    def handle(self, handler_input, exception):
+        # type: (HandlerInput, Exception) -> Response
+        # Log the exception in CloudWatch Logs
+        print(exception)
 
-##############################
-# Program Entry
-##############################
+        speech = "Sorry, I didn't get it. Can you please say it again!!"
+        handler_input.response_builder.speak(speech).ask(speech)
+        return handler_input.response_builder.response
 
+sb = SkillBuilder()
+sb.add_request_handler(LaunchRequestHandler())
+sb.add_request_handler(OpenIntentHandler())
+sb.add_request_handler(ClosedIntentHandler())
+sb.add_request_handler(TrailIntentHandler())
+sb.add_request_handler(HelpIntentHandler())
 
-def lambda_handler(event, context):
-    if event['request']['type'] == "LaunchRequest":
-        return on_launch(event, context)
+sb.add_exception_handler(AllExceptionHandler())
 
-    elif event['request']['type'] == "IntentRequest":
-        return intent_router(event, context)
+handler = sb.lambda_handler()
