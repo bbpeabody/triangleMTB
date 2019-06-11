@@ -2,11 +2,11 @@
 
 SCRIPT=`basename "$0"`
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-LAMBDADIR=$SCRIPTDIR/lambda_function
+SKILLDIR=$SCRIPTDIR/skill
 ENVDIR=$SCRIPTDIR/skill_env
 ZIPDIR=`mktemp -d`
 ZIPFILE=$ZIPDIR/file.zip
-cd $LAMBDADIR
+cd $SKILLDIR
 zip -r9 $ZIPFILE . -x .\*
 cd $ENVDIR
 zip -r9 $ZIPFILE . -x .\*
