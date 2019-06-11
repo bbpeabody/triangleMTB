@@ -1,11 +1,11 @@
 #!/bin/bash
 
-#cd /sbox/bpeabody/python/triangleMTB
 SCRIPT=`basename "$0"`
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+LAMBDADIR=$SCRIPTDIR/lambda_function
 ZIPDIR=`mktemp -d`
 ZIPFILE=$ZIPDIR/file.zip
-cd $DIR
-zip -r9 $ZIPFILE . -x $SCRIPT -x .\*
+cd $LAMBDADIR
+zip -r9 $ZIPFILE . -x .\*
 aws lambda update-function-code --function-name triangleMTB --zip-file fileb://$ZIPFILE
 rm -fr $ZIPDIR
