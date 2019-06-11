@@ -1,0 +1,8 @@
+Installing AWS CLI client:
+sudo apt install python3-pip
+sudo pip3 install --upgrade awscli
+aws configure
+  Enter Access Key
+  Enter Secret Access Key
+  Enter region - us-east-1
+
