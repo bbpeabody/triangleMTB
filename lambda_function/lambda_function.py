@@ -1,3 +1,25 @@
+import logging
+#import requests
+#import six
+#import random
+
+#from ask_sdk_core.skill_builder import SkillBuilder
+#from ask_sdk_core.handler_input import HandlerInput
+#from ask_sdk_core.dispatch_components import (
+#    AbstractRequestHandler, AbstractExceptionHandler,
+#    AbstractResponseInterceptor, AbstractRequestInterceptor)
+#from ask_sdk_core.utils import is_intent_name, is_request_type
+#
+##from typing import Union, Dict, Any, List
+#from ask_sdk_model.dialog import (
+#    ElicitSlotDirective, DelegateDirective)
+#from ask_sdk_model import (
+#    Response, IntentRequest, DialogState, SlotConfirmationStatus, Slot)
+#from ask_sdk_model.slu.entityresolution import StatusCode
+#
+#logger = logging.getLogger(__name__)
+#logger.setLevel(logging.INFO)
+
 import trails
 
 ##############################
@@ -100,10 +122,8 @@ def trip_intent(event, context):
 def cancel_intent():
     return statement("CancelIntent", "You want to cancel")	#don't use CancelIntent as title it causes code reference error during certification 
 
-
 def help_intent():
     return statement("CancelIntent", "You want help")		#same here don't use CancelIntent
-
 
 def stop_intent():
     return statement("StopIntent", "You want to stop")		#here also don't use StopIntent
@@ -113,10 +133,9 @@ def stop_intent():
 # On Launch
 ##############################
 
-
 def on_launch(event, context):
-    return statement("Greetings", "Hello World!")
-
+    t = trails.Trails()
+    return statement("Trail Status", t.summary())
 
 ##############################
 # Routing
@@ -128,23 +147,14 @@ def intent_router(event, context):
 
     # Custom Intents
 
-    if intent == "FavoriteNumberIntent":
-        return statement("My Favorite Number", "My favorite number is seven.")
-        
-    if intent == "HelloWorldIntent":
+    if intent == "OpenIntent":
         t = trails.Trails()
-        return statement("Greetings", "Hello from Triangle MTB Trail Status")
-        
-        
-    if intent == "CounterIntent":
-        return counter_intent(event, context)
+        return statement("Open Trails", t.summary("open"))
 
-    if intent == "SingIntent":
-        return sing_intent(event, context)
-
-    if intent == "TripIntent":
-        return trip_intent(event, context)
-
+    if intent == "ClosedIntent":
+        t = trails.Trails()
+        return statement("Open Trails", t.summary("closed"))
+    
     # Required Intents
 
     if intent == "AMAZON.CancelIntent":

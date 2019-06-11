@@ -3,9 +3,12 @@
 SCRIPT=`basename "$0"`
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 LAMBDADIR=$SCRIPTDIR/lambda_function
+ENVDIR=$SCRIPTDIR/skill_env
 ZIPDIR=`mktemp -d`
 ZIPFILE=$ZIPDIR/file.zip
 cd $LAMBDADIR
+zip -r9 $ZIPFILE . -x .\*
+cd $ENVDIR
 zip -r9 $ZIPFILE . -x .\*
 aws lambda update-function-code --function-name triangleMTB --zip-file fileb://$ZIPFILE
 rm -fr $ZIPDIR
