@@ -36,10 +36,13 @@ class Trail(object):
         month, day = month_day.split('/')
         hour, min = hour_min.split(':')
         now = datetime.datetime.now(tz=EST5EDT())
+        hour = int(hour)
         if am_pm == 'pm':
-            hour = int(hour) + 12
+            if hour < 12:
+                hour += + 12
         else:
-            hour = int(hour)
+            if hour == 12:
+                hour = 0
         date = datetime.datetime(now.year, int(month), int(day), hour, int(min), 0, tzinfo=EST5EDT())
         # Check if the calculated date is in the future.  If so, subtract a year.  This handles the calendar
         # rollover, since we're not given a year from the website.
@@ -143,7 +146,6 @@ class Trails(object):
         closed_trails = []
         statement = ""
         for trail in self._trails:
-            print(trail)
             if trail.is_open():
                 open_trails.append(trail)
             elif trail.is_closed():
