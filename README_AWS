@@ -22,6 +22,6 @@ deactivate
 To install python packages:
 First, activate the newly created virtual environment:
   source venv/bin/activate
-  pip install <package>
-The packages will be installed in venv/lib/python3.6/site-packages.  These packages will be zipped up witht the
+  pip install -r requirements.txt
+The packages will be installed in venv/lib/python3.6/site-packages.  These packages will be zipped up with the
 lambda function code by the "update" bash script.
